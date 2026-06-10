@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+# Deploy แอปคิดเลขเร็วขึ้น GitHub Pages อัตโนมัติเมื่อมีการ push
+on:
+  push:
+    branches: ["claude/fast-math-game-app-a0fyag", "main"]
+  workflow_dispatch:
+
+# สิทธิ์ที่ Actions ต้องใช้เพื่อเปิด/อัปโหลด Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# ให้ deploy ทีละครั้ง ไม่ทับซ้อน
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages (เปิด Pages ให้อัตโนมัติ)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact (อัปโหลดทั้งโฟลเดอร์)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "."
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
