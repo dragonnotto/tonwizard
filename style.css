@@ -1,0 +1,261 @@
+/* =================================================================
+   คิดเลขเร็ว (Fast Math Game) - สไตล์ชีต
+   ออกแบบเน้นตัวหนังสือใหญ่ อ่านง่าย สีสันสดใส ดึงดูดนักเรียน
+   ================================================================= */
+
+/* ----- ตัวแปรสี (CSS Variables) เพื่อให้ปรับธีมได้ง่าย ----- */
+:root {
+  --bg-1: #5b6cff;
+  --bg-2: #8a5cff;
+  --bg-3: #ff6ec4;
+  --card: #ffffff;
+  --ink: #1f2440;
+  --muted: #6b7088;
+  --primary: #5b6cff;
+  --primary-dark: #3f4ed6;
+  --success: #2ecc71;
+  --danger: #ff5470;
+  --warn: #ffb020;
+  --radius: 20px;
+  --shadow: 0 18px 40px rgba(31, 36, 64, 0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Kanit", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--bg-1), var(--bg-2) 55%, var(--bg-3));
+  background-attachment: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px 16px;
+  overflow-x: hidden;
+}
+
+/* ----- ฟองวงกลมเคลื่อนไหวบนพื้นหลัง ----- */
+.bg-bubbles { position: fixed; inset: 0; overflow: hidden; z-index: 0; pointer-events: none; }
+.bg-bubbles span {
+  position: absolute;
+  display: block;
+  bottom: -160px;
+  width: 120px; height: 120px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  animation: rise 18s infinite ease-in;
+}
+.bg-bubbles span:nth-child(1) { left: 10%; animation-delay: 0s; }
+.bg-bubbles span:nth-child(2) { left: 30%; width: 70px; height: 70px; animation-delay: 3s; animation-duration: 22s; }
+.bg-bubbles span:nth-child(3) { left: 55%; width: 160px; height: 160px; animation-delay: 6s; }
+.bg-bubbles span:nth-child(4) { left: 75%; width: 90px; height: 90px; animation-delay: 2s; animation-duration: 26s; }
+.bg-bubbles span:nth-child(5) { left: 88%; width: 130px; height: 130px; animation-delay: 8s; }
+@keyframes rise { to { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
+
+.app { position: relative; z-index: 1; width: 100%; max-width: 620px; }
+
+/* ----- ระบบสลับหน้าจอ (Screens) ----- */
+.screen { display: none; animation: fadeIn 0.4s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* ----- ส่วนหัวหน้าแรก ----- */
+.hero { text-align: center; color: #fff; margin-bottom: 22px; }
+.hero-emoji { font-size: 64px; line-height: 1; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.2)); }
+.hero h1 { font-size: 44px; font-weight: 700; letter-spacing: 1px; }
+.subtitle { font-size: 17px; opacity: 0.92; font-weight: 300; }
+
+/* ----- การ์ดทั่วไป ----- */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+.card-title { font-size: 19px; font-weight: 600; margin: 6px 0 14px; }
+
+/* ----- ฟิลด์ในฟอร์ม ----- */
+.field { margin-bottom: 18px; }
+.field > label { display: block; font-weight: 500; margin-bottom: 8px; color: var(--muted); }
+.field-inline { display: flex; align-items: center; justify-content: space-between; }
+.field-inline label { margin: 0; }
+
+input[type="text"], input[type="number"] {
+  width: 100%;
+  font-family: inherit;
+  font-size: 18px;
+  padding: 14px 16px;
+  border: 2px solid #e4e6f1;
+  border-radius: 14px;
+  background: #f7f8fc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, input[type="number"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(91, 108, 255, 0.15);
+  background: #fff;
+}
+
+/* ----- ปุ่มเลือกระดับความยาก (option) ----- */
+.option-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.option {
+  font-family: inherit;
+  cursor: pointer;
+  border: 2px solid #e4e6f1;
+  background: #f7f8fc;
+  border-radius: 16px;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.18s;
+}
+.option:hover { border-color: var(--primary); transform: translateY(-2px); }
+.option.active { border-color: var(--primary); background: rgba(91, 108, 255, 0.1); box-shadow: 0 6px 16px rgba(91,108,255,0.2); }
+.option-emoji { font-size: 30px; }
+.option-label { font-weight: 600; font-size: 16px; }
+.option-desc { font-size: 12px; color: var(--muted); }
+
+/* ----- ชิป (เลือกประเภทโจทย์ / เวลา) ----- */
+.chip-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+  font-family: inherit;
+  cursor: pointer;
+  border: 2px solid #e4e6f1;
+  background: #f7f8fc;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.18s;
+}
+.chip:hover { border-color: var(--primary); }
+.chip.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+
+/* ----- สวิตช์เปิด/ปิดเสียง ----- */
+.switch { width: 52px; height: 30px; appearance: none; background: #d4d7e6; border-radius: 999px; position: relative; cursor: pointer; transition: background 0.2s; }
+.switch::after { content: ""; position: absolute; width: 24px; height: 24px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.switch:checked { background: var(--success); }
+.switch:checked::after { left: 25px; }
+
+/* ----- ปุ่มหลัก ----- */
+.btn {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  padding: 14px 22px;
+  transition: transform 0.12s, box-shadow 0.2s, background 0.2s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: #fff; box-shadow: 0 8px 18px rgba(91,108,255,0.35); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-lg { width: 100%; font-size: 20px; padding: 16px; margin-top: 4px; }
+.btn-ghost { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+.btn-ghost:hover { background: rgba(91,108,255,0.08); }
+.btn-text { background: none; border: none; color: var(--muted); font-family: inherit; font-size: 14px; cursor: pointer; text-decoration: underline; }
+.btn-text:hover { color: var(--danger); }
+
+/* ----- ตารางคะแนน ----- */
+.lb-head { display: flex; justify-content: space-between; align-items: center; }
+.leaderboard ol { list-style: none; counter-reset: rank; margin-top: 6px; }
+.leaderboard li {
+  counter-increment: rank;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 6px;
+  border-bottom: 1px solid #eef0f7;
+  font-size: 16px;
+}
+.leaderboard li:last-child { border-bottom: none; }
+.leaderboard li::before {
+  content: counter(rank);
+  flex: 0 0 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: #eef0f7;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--muted);
+}
+.leaderboard li:nth-child(1)::before { background: #ffd54a; color: #7a5c00; }
+.leaderboard li:nth-child(2)::before { background: #d8dce6; color: #4a4f63; }
+.leaderboard li:nth-child(3)::before { background: #f0b27a; color: #7a3d00; }
+.lb-name { flex: 1; font-weight: 500; }
+.lb-meta { font-size: 12px; color: var(--muted); }
+.lb-score { font-weight: 700; font-size: 18px; color: var(--primary); }
+
+/* ============================================================= */
+/*  หน้าจอเล่นเกม                                                  */
+/* ============================================================= */
+.game-topbar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.stat { background: rgba(255,255,255,0.95); border-radius: 16px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
+.stat-label { display: block; font-size: 13px; color: var(--muted); }
+.stat-value { display: block; font-size: 30px; font-weight: 700; line-height: 1.1; }
+.timer-stat .stat-value { color: var(--primary); }
+.timer-stat.low .stat-value { color: var(--danger); animation: pulse 0.6s infinite; }
+@keyframes pulse { 50% { transform: scale(1.15); } }
+
+/* แถบเวลากราฟิก */
+.time-bar { height: 12px; background: rgba(255,255,255,0.4); border-radius: 999px; overflow: hidden; margin-bottom: 24px; }
+.time-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #2ecc71, #ffb020); border-radius: 999px; transition: width 1s linear, background 0.4s; }
+.time-bar-fill.low { background: linear-gradient(90deg, #ff5470, #ff8a5c); }
+
+/* โซนโจทย์ */
+.problem-zone { background: var(--card); border-radius: var(--radius); padding: 36px 24px; box-shadow: var(--shadow); text-align: center; }
+.problem { font-size: 64px; font-weight: 700; letter-spacing: 2px; margin-bottom: 28px; min-height: 70px; }
+.answer-form { display: flex; gap: 12px; }
+.answer-form input { font-size: 28px; text-align: center; font-weight: 600; }
+.answer-form .btn { font-size: 20px; padding: 0 28px; }
+
+/* แอนิเมชันตอบถูก/ผิด */
+.problem-zone.correct { animation: flashGreen 0.45s; }
+.problem-zone.wrong { animation: shake 0.4s; }
+@keyframes flashGreen { 0%,100% { background: var(--card); } 40% { background: #e6fff0; } }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-10px); } 40%,80% { transform: translateX(10px); } }
+
+.feedback { margin-top: 18px; font-size: 22px; font-weight: 600; min-height: 30px; }
+.feedback.correct { color: var(--success); }
+.feedback.wrong { color: var(--danger); }
+
+.quit { display: block; margin: 18px auto 0; color: rgba(255,255,255,0.9); }
+.quit:hover { color: #fff; }
+
+/* ============================================================= */
+/*  หน้าจอสรุปผล                                                  */
+/* ============================================================= */
+.result-card { text-align: center; padding: 36px 28px; }
+.result-emoji { font-size: 72px; }
+.result-card h1 { font-size: 36px; margin: 6px 0; }
+.result-player { color: var(--muted); font-size: 16px; margin-bottom: 18px; }
+.result-score { margin: 10px 0 24px; }
+.result-score span { font-size: 72px; font-weight: 700; color: var(--primary); line-height: 1; }
+.result-score small { display: block; color: var(--muted); font-size: 16px; }
+
+.result-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 26px; }
+.result-stats > div { background: #f7f8fc; border-radius: 14px; padding: 14px; }
+.result-stats strong { display: block; font-size: 28px; font-weight: 700; }
+.result-stats span { font-size: 14px; color: var(--muted); }
+
+.result-actions { display: flex; flex-direction: column; gap: 12px; }
+
+/* ----- ปรับให้เหมาะกับจอเล็ก ----- */
+@media (max-width: 480px) {
+  .hero h1 { font-size: 34px; }
+  .problem { font-size: 48px; }
+  .result-score span { font-size: 56px; }
+  .answer-form { flex-direction: column; }
+}
