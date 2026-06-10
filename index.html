@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>คิดเลขเร็ว | Fast Math Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- พื้นหลังตกแต่งด้วยฟองวงกลมเคลื่อนไหว -->
+  <div class="bg-bubbles">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <main class="app">
+    <!-- ============================================================= -->
+    <!-- หน้าจอที่ 1: หน้าเริ่มต้น (กรอกข้อมูล + เลือกระดับความยาก)        -->
+    <!-- ============================================================= -->
+    <section id="screen-start" class="screen active">
+      <header class="hero">
+        <div class="hero-emoji">🧮</div>
+        <h1>คิดเลขเร็ว</h1>
+        <p class="subtitle">ฝึกสมอง ท้าทายความเร็ว บวก ลบ คูณ หาร</p>
+      </header>
+
+      <form id="player-form" class="card" autocomplete="off">
+        <h2 class="card-title">👋 ข้อมูลผู้เล่น</h2>
+
+        <div class="field">
+          <label for="player-name">ชื่อ - สกุล</label>
+          <input type="text" id="player-name" placeholder="เช่น เด็กชายเก่ง เรียนดี" maxlength="60" />
+        </div>
+
+        <div class="field">
+          <label for="player-class">ชั้นเรียน</label>
+          <input type="text" id="player-class" placeholder="เช่น ป.5/2" maxlength="20" />
+        </div>
+
+        <h2 class="card-title">⚙️ ตั้งค่าเกม</h2>
+
+        <div class="field">
+          <label>ระดับความยาก</label>
+          <div class="option-grid" id="difficulty-group">
+            <button type="button" class="option" data-difficulty="easy">
+              <span class="option-emoji">😊</span>
+              <span class="option-label">ง่าย</span>
+              <span class="option-desc">เลข 1 หลัก</span>
+            </button>
+            <button type="button" class="option active" data-difficulty="medium">
+              <span class="option-emoji">🙂</span>
+              <span class="option-label">ปานกลาง</span>
+              <span class="option-desc">เลข 2 หลัก</span>
+            </button>
+            <button type="button" class="option" data-difficulty="hard">
+              <span class="option-emoji">🤓</span>
+              <span class="option-label">ยาก</span>
+              <span class="option-desc">เลข 3 หลัก</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>ประเภทโจทย์</label>
+          <div class="chip-group" id="ops-group">
+            <button type="button" class="chip active" data-op="+">➕ บวก</button>
+            <button type="button" class="chip active" data-op="-">➖ ลบ</button>
+            <button type="button" class="chip active" data-op="×">✖️ คูณ</button>
+            <button type="button" class="chip active" data-op="÷">➗ หาร</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>เวลาต่อรอบ</label>
+          <div class="chip-group" id="time-group">
+            <button type="button" class="chip" data-time="30">30 วิ</button>
+            <button type="button" class="chip active" data-time="60">60 วิ</button>
+            <button type="button" class="chip" data-time="90">90 วิ</button>
+            <button type="button" class="chip" data-time="120">120 วิ</button>
+          </div>
+        </div>
+
+        <div class="field field-inline">
+          <label for="sound-toggle">🔊 เปิดเสียงเอฟเฟกต์</label>
+          <input type="checkbox" id="sound-toggle" class="switch" checked />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg">🚀 เริ่มเล่น</button>
+      </form>
+
+      <!-- ตารางคะแนนสูงสุด (เก็บใน localStorage ของเครื่อง) -->
+      <div class="card leaderboard" id="leaderboard-card" hidden>
+        <div class="lb-head">
+          <h2 class="card-title">🏆 สถิติคะแนนสูงสุด</h2>
+          <button type="button" class="btn-text" id="clear-scores">ล้างสถิติ</button>
+        </div>
+        <ol id="leaderboard-list"></ol>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- หน้าจอที่ 2: หน้าเล่นเกม                                        -->
+    <!-- ============================================================= -->
+    <section id="screen-game" class="screen">
+      <div class="game-topbar">
+        <div class="stat">
+          <span class="stat-label">คะแนน</span>
+          <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="stat timer-stat">
+          <span class="stat-label">เวลา</span>
+          <span class="stat-value" id="timer">60</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">ทำถูกติดต่อ</span>
+          <span class="stat-value" id="streak">0</span>
+        </div>
+      </div>
+
+      <!-- แถบเวลาแสดงผลแบบกราฟิก -->
+      <div class="time-bar"><div class="time-bar-fill" id="time-bar-fill"></div></div>
+
+      <div class="problem-zone">
+        <div class="problem" id="problem">5 + 3</div>
+        <form id="answer-form" class="answer-form" autocomplete="off">
+          <input type="number" id="answer-input" inputmode="numeric" placeholder="คำตอบ ?" />
+          <button type="submit" class="btn btn-primary">ตอบ</button>
+        </form>
+        <div class="feedback" id="feedback"></div>
+      </div>
+
+      <button type="button" class="btn-text quit" id="quit-btn">⏹ จบเกม</button>
+    </section>
+
+    <!-- ============================================================= -->
+    <!-- หน้าจอที่ 3: หน้าสรุปผล                                         -->
+    <!-- ============================================================= -->
+    <section id="screen-result" class="screen">
+      <div class="card result-card">
+        <div class="result-emoji" id="result-emoji">🎉</div>
+        <h1 id="result-title">เก่งมาก!</h1>
+        <p class="result-player" id="result-player"></p>
+
+        <div class="result-score">
+          <span id="result-score">0</span>
+          <small>คะแนน</small>
+        </div>
+
+        <div class="result-stats">
+          <div><strong id="result-correct">0</strong><span>ตอบถูก</span></div>
+          <div><strong id="result-wrong">0</strong><span>ตอบผิด</span></div>
+          <div><strong id="result-accuracy">0%</strong><span>ความแม่นยำ</span></div>
+          <div><strong id="result-best">0</strong><span>ถูกติดต่อสูงสุด</span></div>
+        </div>
+
+        <div class="result-actions">
+          <button type="button" class="btn btn-primary btn-lg" id="play-again">🔄 เล่นอีกครั้ง</button>
+          <button type="button" class="btn btn-ghost" id="back-home">🏠 หน้าหลัก</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
